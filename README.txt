@@ -9,7 +9,7 @@ Just copy the settings from the existing QTest project and you'll be fine.
 
 3. The non-protobuf contract of the udp message:
 	
-	    byte 0:		message length in bytes (including this one)
+	byte 0:		message length in bytes (including this one)
         byte 1:		culture code (0 = en-US, 1 = fr-CA)
         byte 2:		message confidence (0-100)
         byte 3:		opcode (for grammar-to-opcode translation, see end of this file)
