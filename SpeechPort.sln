@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual C# Express 2010
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecognizerApp", "RecognizerApp\RecognizerApp.csproj", "{9627C5F7-C3E6-48F9-9720-A9183A72E7A9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{28C8296F-77AA-4C55-BEDA-8508EF91BA9A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prototype", "Prototype\Prototype.csproj", "{50391109-12CA-4D8F-B443-8C223F5AB7F8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interfaces", "Interfaces\Interfaces.csproj", "{62A9050D-E784-4AEA-BAE5-D1CC8D18B6DE}"
 EndProject
@@ -29,10 +27,6 @@ Global
 		{28C8296F-77AA-4C55-BEDA-8508EF91BA9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{28C8296F-77AA-4C55-BEDA-8508EF91BA9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{28C8296F-77AA-4C55-BEDA-8508EF91BA9A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{50391109-12CA-4D8F-B443-8C223F5AB7F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{50391109-12CA-4D8F-B443-8C223F5AB7F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{50391109-12CA-4D8F-B443-8C223F5AB7F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{50391109-12CA-4D8F-B443-8C223F5AB7F8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{62A9050D-E784-4AEA-BAE5-D1CC8D18B6DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{62A9050D-E784-4AEA-BAE5-D1CC8D18B6DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62A9050D-E784-4AEA-BAE5-D1CC8D18B6DE}.Release|Any CPU.ActiveCfg = Release|Any CPU

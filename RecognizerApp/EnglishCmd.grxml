@@ -246,6 +246,17 @@ xmlns="http://www.w3.org/2001/06/grammar">
     <tag>out="SH";</tag>
     <item>shrink</item>
   </rule>
+
+  <rule id="ShrinkCmd">    
+    <item repeat="0-1">change</item>
+    <item>language</item>
+    <item repeat="0-1">to</item>
+    <one-of>
+      <item>english</item> <tag>out.arg = 0;</tag>
+      <item>french</item>  <tag>out.arg = 1;</tag>
+    </one-of>
+    <tag>out = "LANG " + out.arg;</tag>
+  </rule>
   
   <!--  ================   COMMANDS WITH 1 ARGUMENT  =============================== -->
   
@@ -288,8 +299,8 @@ xmlns="http://www.w3.org/2001/06/grammar">
   <rule id="CommandNoArgs">
     <one-of>
       <item><ruleref uri="#OpenCmd"/></item>
-      <item><ruleref uri="#CloseCmd"/>
-      </item><item><ruleref uri="#ShowCmd"/></item>
+      <item><ruleref uri="#CloseCmd"/></item>
+      <item><ruleref uri="#ShowCmd"/></item>
       <item><ruleref uri="#HideCmd"/></item>
       <item><ruleref uri="#GrowCmd"/></item>
       <item><ruleref uri="#ShrinkCmd"/></item>

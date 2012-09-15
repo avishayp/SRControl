@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Speech.Recognition;
-using VoiceCommand;
 
 namespace RecognizerApp
 {
@@ -24,15 +23,6 @@ namespace RecognizerApp
             return res;
         }
 
-        public static string DebugString(this VoiceCommandProto cmd)
-        {
-            string res = cmd.opcode + " ";
-            foreach (var v in cmd.args)
-                res += v + " ";
-
-            return res;
-        }
-
         public static byte Checksum(this byte[] arr)
         {
             int ret = 0;
@@ -44,9 +34,14 @@ namespace RecognizerApp
             return (byte) (ret % 256);
         }
 
+        /// <summary>
+        /// C# null termitation style...
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
         public static byte[] GetBytes(this String str)
         {
-            return Encoding.ASCII.GetBytes(str + Char.MinValue);
+            return Encoding.ASCII.GetBytes(str /*+ Char.MinValue*/);    // the null termination is done elsewhere now
         }
 
     }

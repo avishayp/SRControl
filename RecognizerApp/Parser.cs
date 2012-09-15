@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using VoiceCommand;
 using System.Speech.Recognition;
 using Configuration;
 
 namespace RecognizerApp
 {
+    /// <summary>
+    /// class used to parse objects to bytes
+    /// </summary>
     public class Parser
     {
         // byte protocol (minimal): 
@@ -20,6 +22,11 @@ namespace RecognizerApp
         // 5. arg2 (optional)
         // 6. checksum
 
+        /// <summary>
+        /// recognition result to byte array - minimal format
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
         public byte[] ParseResult(RecognitionResult result)
         {
             String opcode;
@@ -55,13 +62,19 @@ namespace RecognizerApp
         // 5. arg2 (optional)
         // 6. checksum (of this block)
 
-        // 7. second block length in bytes (including this one)
-        // 8. culture code (0 = en-US, 1 = fr-CA)
-        // 9. N - number of words 
+        // 7. culture code (0 = en-US, 1 = fr-CA)
+        // 8. N - number of words 
         // repeated N times:
-            // 10. confidence (0-100)
-            // 11. word (null-terminated)
+            // 9. confidence (0-100)
+            // 10. word (array of 11 chars, always null-terminated)
 
+        /// <summary>
+        /// recognition result to byte array - full format
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="cultureinfo"></param>
+        /// <param name="full"></param>
+        /// <returns></returns>
         public byte[] ParseResult(RecognitionResult result, byte cultureinfo, bool full)
         {
             Byte[] res = ParseResult(result);
@@ -72,30 +85,62 @@ namespace RecognizerApp
 
             List<byte> block2 = new List<byte>();
 
-            block2.Add(0);     // length of block, not known yet
-            block2.Add(cultureinfo);     // length of block, not known yet
+            block2.Add(cultureinfo);   
             block2.Add((byte)(result.Words.Count));     // number of words 
 
             foreach (var v in result.Words)
             {
                 block2.AddRange(ParseWord(v));
             }
-            block2[0] = (byte)block2.Count;
 
             List<byte> lst = res.ToList();
             lst.AddRange(block2);
             return lst.ToArray();
         }
 
-        private byte[] ParseWord(RecognizedWordUnit word)
+        /// <summary>
+        /// recognized word unit to byte array
+        /// </summary>
+        /// <param name="word">recognized word</param>
+        /// <param name="len">length of output byte array</param>
+        /// <returns></returns>
+        private byte[] ParseWord(RecognizedWordUnit word, int len = 12)
         {
-            byte[] retval = new byte[word.Text.Length + 2]; // 1 for '/0', 1 for confidence;
+            byte[] retval = new byte[len]; 
             byte[] str = word.Text.GetBytes();
-            Array.Copy(str, 0, retval, 1, str.Length);
-            retval[0] = (byte)(0.5 + word.Confidence * 100);
+            Array.Copy(str, 0, retval, 1, Math.Min(str.Length, len - 2));   // yes, if the word has more than 10 letters, it will be truncated!
+            retval[0] = (byte)(0.5 + word.Confidence * 100);    // confidence
             return retval;
         }
 
+        /// <summary>
+        /// parses recognition result if possible
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="info"></param>
+        /// <param name="res"></param>
+        /// <returns>true if the semantic was in expected format</returns>
+        public bool TryParseResult(RecognitionResult result, System.Globalization.CultureInfo info, out byte[] res)
+        {
+            res = null;
+            try
+            {
+                res = ParseResult(result, info);
+                return true;
+            }
+            catch
+            {
+                Console.WriteLine("Failed to parse recognition result");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// recognition result to byte array
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="info"></param>
+        /// <returns></returns>
         public byte[] ParseResult(RecognitionResult result, System.Globalization.CultureInfo info)
         {
             byte culture = 0;
@@ -105,34 +150,13 @@ namespace RecognizerApp
             return ParseResult(result, culture, true);
         }
 
-        public VoiceCommandProto ParseResultToCommand(RecognitionResult result)
-        {
-            String opcode;
-            List<int> args;
-
-            VoiceCommandProto res = new VoiceCommandProto();
-
-            // first add the semantics:
-            if (result.Semantics == null || result.Semantics.Value == null)
-                return res;
-
-            res.words.Add(new VoiceCommandProto.word_result() { word = result.Semantics.Value.ToString(), confidence = result.Semantics.Confidence });
-
-            // then the words:
-            foreach (var word in result.Words)
-            {
-                res.words.Add(new VoiceCommandProto.word_result() { word = word.Text, confidence = word.Confidence });
-            }
-
-            if (GetOpcodeArgs(result, out opcode, out args))
-            {
-                res.opcode = opcode;
-                res.args.AddRange(args);
-            }
-
-            return res;
-        }
-
+        /// <summary>
+        /// get the opcode and arguments from the recognized phrase
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="opcode"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
         private bool GetOpcodeArgs(RecognitionResult result, out String opcode, out List<int> args)
         {
             opcode = String.Empty;
