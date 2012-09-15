@@ -14,7 +14,7 @@ namespace RecognizerApp
     {
         public static String DebugString(this RecognitionResult result)
         {
-            string res = String.Format("{0}. {1} ", result.Text, "Words:");
+            string res = String.Format("{0} [{1}]. {2} ", result.Text, result.Confidence.ToString("F2"), "Words:");
             foreach (var v in result.Words)
             {
                 res += String.Format("{0} [{1}], ", v.Text, v.Confidence.ToString("F2"));
@@ -43,5 +43,11 @@ namespace RecognizerApp
 
             return (byte) (ret % 256);
         }
+
+        public static byte[] GetBytes(this String str)
+        {
+            return Encoding.ASCII.GetBytes(str + Char.MinValue);
+        }
+
     }
 }

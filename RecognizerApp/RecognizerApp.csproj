@@ -81,6 +81,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\AudioHelper\AudioHelper.csproj">
+      <Project>{56CE70A7-1B8F-404B-8296-936CDAB49FF5}</Project>
+      <Name>AudioHelper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Client\Client.csproj">
       <Project>{28C8296F-77AA-4C55-BEDA-8508EF91BA9A}</Project>
       <Name>Client</Name>
@@ -127,7 +131,9 @@
   <ItemGroup>
     <None Include="App.cfg" />
     <None Include="test.grxml" />
-    <None Include="EnglishCmd.grxml" />
+    <None Include="EnglishCmd.grxml">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

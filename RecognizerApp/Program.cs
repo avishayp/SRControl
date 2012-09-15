@@ -9,15 +9,24 @@ namespace RecognizerApp
 {
     class Program
     {
+
         static void Main(string[] args)
         {
-            Manager mngr = new Manager();
-
-            mngr.Init();
-            mngr.StartRecognize();
-            Application.Run();  // just to keep the background thread running
+            using (Manager _mngr = new Manager())
+            {
+                try
+                {
+                    _mngr.Init();
+                    _mngr.StartRecognize();
+                    Application.Run();  // just to keep the background thread running
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(String.Format("Message: {0}\n, Stack: {1}\n InnerException: {2}",
+                        ex.Message, ex.StackTrace, ex.InnerException), "Application Error");
+                }
+            }
         }
-
     }
 
 }

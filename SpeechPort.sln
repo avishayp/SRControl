@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+# Visual C# Express 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecognizerApp", "RecognizerApp\RecognizerApp.csproj", "{9627C5F7-C3E6-48F9-9720-A9183A72E7A9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{28C8296F-77AA-4C55-BEDA-8508EF91BA9A}"
@@ -13,10 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Configuration", "Configurat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools", "Tools\Tools.csproj", "{88754462-5B52-44E8-8D76-F44F36D15C2B}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DOC", "DOC", "{EDC22A7B-82EA-47C8-B069-B3A9E810C49A}"
-	ProjectSection(SolutionItems) = preProject
-		README.txt = README.txt
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioHelper", "AudioHelper\AudioHelper.csproj", "{56CE70A7-1B8F-404B-8296-936CDAB49FF5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,6 +45,10 @@ Global
 		{88754462-5B52-44E8-8D76-F44F36D15C2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{88754462-5B52-44E8-8D76-F44F36D15C2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{88754462-5B52-44E8-8D76-F44F36D15C2B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56CE70A7-1B8F-404B-8296-936CDAB49FF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56CE70A7-1B8F-404B-8296-936CDAB49FF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56CE70A7-1B8F-404B-8296-936CDAB49FF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56CE70A7-1B8F-404B-8296-936CDAB49FF5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

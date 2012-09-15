@@ -9,8 +9,8 @@ Just copy the settings from the existing QTest project and you'll be fine.
 
 3. The non-protobuf contract of the udp message:
 	
-	byte 0:		message length in bytes (including this one)
-        byte 1:		culture code (0 = en-US, 1 = fr-CA)
+		byte 0:		message length in bytes (including this one)
+        byte 1:		message format (0 == minimal, 1 == full, documented in section 6)
         byte 2:		message confidence (0-100)
         byte 3:		opcode (for grammar-to-opcode translation, see end of this file)
         byte 4:		arg1 (optional)
@@ -38,6 +38,9 @@ Just copy the settings from the existing QTest project and you'll be fine.
 // the default culture defines which SpeechRecognizer will be active on startup:
   <DefaultCulture>en-US</DefaultCulture>
 
+// use this field to feed wav file to the recognizer (leave empty for real audio input):
+  <AudioInput>c:\\temp\\tests\\sound1.wav</AudioInput>
+  
 // each supported culture has a matching grammar file, to be loaded to the recognizer on startup:
   <GrammarFiles>
     <string>en-US=C:\\Work\\SpeechPort\\RecognizerApp\\EnglishCmd.grxml</string>
@@ -74,4 +77,31 @@ Just copy the settings from the existing QTest project and you'll be fine.
       <NUM>60</NUM>
     </Node>
   </Opcodes>
+  ...
 </Config>
+
+5. Common errors:
+	*	app.cfg file not located in startup folder.
+	*	grammar file not found.
+	*	no microphone connected.
+	
+You'll get an informative error message in any case.
+
+6. The full message udp contract:
+
+		byte 0:		message length in bytes (including this one)
+        byte 1:		message format (1 == full)
+		byte 2:		culture code (0 == en-US, 1 == fr-CA)
+        byte 3:		message confidence (0-100)
+        byte 4:		opcode (for grammar-to-opcode translation, see end of this file)
+		byte 5:		number of arguments
+        ...			arguments (1 byte each)
+		
+        ...			words in following repeated format:
+						1 byte: confidence
+						n bytes: null terminated char array
+			
+        byte N:		checksum
+		
+		
+		

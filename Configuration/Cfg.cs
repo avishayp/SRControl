@@ -27,6 +27,7 @@ namespace Configuration
             public String port;
             public String DefaultCulture;
             public List<String> GrammarFiles;
+            public String AudioInput;
             public int RootConfidenceLevel;
             public List<Node> Opcodes;
          }
@@ -66,7 +67,7 @@ namespace Configuration
 
             if (!File.Exists(CONFIG_FILE))
             {
-                throw new Exception(String.Format("Failed to load config file from {0}", CONFIG_FILE));
+                throw new Exception(String.Format("Failed to load config file from {0}. Please put {0} on your startup directory!", CONFIG_FILE));
             }
 
             try
@@ -75,7 +76,10 @@ namespace Configuration
                 ParseGrammarFiles();
                 ParseOpcodes();
             }
-            catch { }
+            catch 
+            {
+                throw;
+            }
         }
 
         private Cfg()
@@ -112,6 +116,7 @@ namespace Configuration
         public Dictionary<String,String> GrammarFiles { get { return _grammarFiles; } }
         public int RootConfidenceLevel { get { return _config.RootConfidenceLevel; } }
         public Dictionary<String, int> Opcodes { get; private set; }
+        public String AudioInput { get { return _config.AudioInput; } }
     }
 
 }

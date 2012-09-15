@@ -1,4 +1,9 @@
-﻿using System;
+﻿/*************************
+ * 
+ * 
+ * 
+ * *******************************/
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,7 +24,7 @@ namespace RecognizerApp
     /// <summary>
     /// monster class that does all the work
     /// </summary>
-    class Manager
+    class Manager : IDisposable
     {
         public Manager()
         {
@@ -29,38 +34,60 @@ namespace RecognizerApp
         public void StartRecognize()
         {
             _worker.RunWorkerAsync();
+
+            if (IsDemo)
+                PlaySound();
+
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="recognizer"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
         private bool HandleRecognized(SpeechRecognitionEngine recognizer, RecognitionResult result)
         {
             if (!IsConfident(result))
                 return false;
 
+            _count++;   // successful recognitions counter, this is just for debugging
+
             // for debug
             PrintResult(result);
+            SaveAudioStream(result);
 
             VoiceCommandProto cmd = _parser.ParseResultToCommand(result);
-            cmd.culture = recognizer.RecognizerInfo.Culture.ToString();
-            SendCommand(cmd);
+            byte[] datagram = _parser.ParseResult(result, recognizer.RecognizerInfo.Culture);
 
+            // protobuf - not used
+            //cmd.culture = recognizer.RecognizerInfo.Culture.ToString();
+            //SendCommand(cmd);
+
+            SendBytes(datagram);
             return true;
         }
 
         public void StopRecognize()
         {
-            _worker.CancelAsync();
-            ActiveRecognizer.RecognizeAsyncStop();
+            if (_worker != null && _worker.IsBusy)
+                _worker.CancelAsync();
+
+            if (ActiveRecognizer != null)
+                ActiveRecognizer.RecognizeAsyncStop();
+
+            StopSound();
+
+            if (File.Exists(TempFileName))
+                File.Delete(TempFileName);
         }
 
-        public void DisposeRecognizers()
+        public void Abort()
         {
+            StopRecognize();
+
             for (int i = 0; i < _recognizers.Count; i++)
                 _recognizers[i].Dispose();
-        }
-
-        private bool IsConfident(RecognitionResult result)
-        {
-            return 100 * result.Words[0].Confidence > Cfg.Instance.RootConfidenceLevel;
         }
 
         /// <summary>
@@ -68,9 +95,8 @@ namespace RecognizerApp
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        void _worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            _count++;   // recognitions counter, this is just for debugging
+        private void _worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {            
             RecognitionResult res = e.UserState as RecognitionResult;
             if (!HandleRecognized(res))
                 ReportRejectedRecognition(res);
@@ -81,28 +107,68 @@ namespace RecognizerApp
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        void _worker_DoWork(object sender, DoWorkEventArgs e)
+        private void RecognitionLoop(object sender, DoWorkEventArgs e)
         {
             RecognitionResult result;
             while (true)
             {
                 result = ActiveRecognizer.Recognize();      // synchronic recognition
+
                 if (result != null)
                 {
-                    _worker.ReportProgress(0, result);      // this event is (mis)used to handle the recognition result on the main app thread
+                    ((BackgroundWorker)sender).ReportProgress(0, result);      // this event is (mis)used to handle the recognition result on the main app thread
                 }
             }
         }
 
         private SpeechRecognitionEngine InitRecognizer(String culture, String grammarfile)
         {
-            SpeechRecognitionEngine recognizer = new SpeechRecognitionEngine(new CultureInfo(culture));
-            recognizer.SetInputToDefaultAudioDevice();
-            recognizer.LoadGrammar(new Grammar(grammarfile));
-            return recognizer;
-        }
+            Console.WriteLine(String.Format("New recognizer: culture={0}, grammar={1}", culture, grammarfile));
 
-        private static int _count = 0;
+            if (!File.Exists(grammarfile))
+            {
+                throw new Exception(String.Format("Grammar file {0} for culture {1} was not found.", grammarfile, culture.ToString()));
+            }
+
+            SpeechRecognitionEngine recognizer = new SpeechRecognitionEngine(new CultureInfo(culture));
+
+            if (String.IsNullOrEmpty(Cfg.Instance.AudioInput))
+            {
+                try
+                {
+                    recognizer.SetInputToDefaultAudioDevice();
+                    Console.WriteLine("Voice is recorded to " + _wavFile);
+                }
+                catch (InvalidOperationException)
+                {
+                    throw new Exception("Failed to set audio input device - make sure microphone is connected and working!");
+                }
+            }
+            else
+            {
+                if (File.Exists(Cfg.Instance.AudioInput))
+                {                    
+                    recognizer.SetInputToWaveFile(Cfg.Instance.AudioInput);
+                }
+                else
+                {
+                    throw new Exception("Speech recognizer init with wav file input failed because the file " + Cfg.Instance.AudioInput +
+                        " was not found.\nLeave AudioInput configuration field empty to use microphone the audio input device!");
+                }
+            }
+
+            try
+            {
+                recognizer.LoadGrammar(new Grammar(grammarfile));
+            }
+            catch (NotSupportedException ex)
+            {
+                recognizer.LoadGrammar(new DictationGrammar());
+                Console.WriteLine("Grammar file " + grammarfile + " is not supported - operating in dictation mode.");
+            }
+
+            return recognizer;
+        }        
 
         private void PrintResult(RecognitionResult result)
         {
@@ -115,9 +181,86 @@ namespace RecognizerApp
             Console.WriteLine(String.Format("cmd {0}: {1}", _count, cmd.DebugString()));
         }
 
+        private void PrintBytes(byte[] data)
+        {
+            Console.WriteLine("bytes: " + String.Join(" ", Array.ConvertAll(data, Convert.ToString)));
+        }
+
         private bool HandleRecognized(RecognitionResult result)
         {
             return HandleRecognized(ActiveRecognizer, result);
+        }
+
+        private bool SendBytes(byte[] data)
+        {
+            // for debug
+            PrintBytes(data);
+            Console.WriteLine();
+
+            return _sender.Send(data) > 0;
+        }
+
+        private void PlaySound()
+        {
+            if (_player == null)
+            {
+                _player = new System.Media.SoundPlayer(Cfg.Instance.AudioInput);
+            }
+
+            _player.Stop();
+            _player.Play();
+        }
+
+        private void StopSound()
+        {
+            if (_player != null)
+                _player.Stop();
+        }
+
+        private void SaveAudioStream(RecognitionResult res)
+        {
+            if (IsDemo)
+                return;
+
+            if (!File.Exists(_wavFile))
+            {
+                using (Stream stream = File.Create(_wavFile))
+                {
+                    res.Audio.WriteToWaveStream(stream);
+                }
+            }
+            else
+            {
+                using (Stream stream = File.Create(TempFileName))
+                {
+                    res.Audio.WriteToWaveStream(stream);
+                }
+
+                AudioHelper.AudioMixer.Concatenate(_wavFile, TempFileName, 0.5);
+                File.Delete(TempFileName);
+            }
+        }
+
+        private String TempFileName
+        {
+            get { return _wavFile + ".temp"; }
+        }
+
+        private String GetWavFileName()
+        {
+            int k = 1;
+
+            String dir = @"c:\temp\sounds";
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            String file = String.Format("audio_{0}.wav", k);
+
+            while (File.Exists(Path.Combine(dir, file)))
+            {
+                file = String.Format("audio_{0}.wav", ++k);
+            }
+            return Path.Combine(dir, file);
         }
 
         private bool SendCommand(VoiceCommandProto cmd)
@@ -131,6 +274,11 @@ namespace RecognizerApp
                 byte[] data = new byte[stream.Length];
                 stream.Position = 0;
                 stream.Read(data, 0, data.Length);
+
+                // for debug
+                PrintBytes(data);
+                Console.WriteLine();
+
                 return _sender.Send(data) > 0;
             }
         }
@@ -138,7 +286,15 @@ namespace RecognizerApp
         private void ReportRejectedRecognition(RecognitionResult res)
         {
             Console.WriteLine(String.Format("Speech recognition rejected: Root confidence = {0}, threshold = {1}", res.Words[0].Confidence.ToString("F2"), (Cfg.Instance.RootConfidenceLevel / 100.0).ToString("F2") ));
+            PrintResult(res);
         }
+
+        private bool IsConfident(RecognitionResult result)
+        {
+            return 100 * result.Words[0].Confidence > Cfg.Instance.RootConfidenceLevel;
+        }
+
+        private bool IsDemo { get { return File.Exists(Cfg.Instance.AudioInput); } }
 
         #region /////// I N I T ///////
 
@@ -146,10 +302,26 @@ namespace RecognizerApp
 
         public void Init()
         {
+            ActiveCulture = new CultureInfo(Cfg.Instance.DefaultCulture);
+
             InitWorker();
             IsInit = InitClient();
-            IsInit &= InitGrammars();
+            InitGrammars();
+            RegisterRecognitionEvents();
             SetActiveRecognizer();
+        }
+
+        private void RegisterRecognitionEvents()
+        {
+            foreach (var v in _recognizers)
+            {
+                v.SpeechDetected += new EventHandler<SpeechDetectedEventArgs>(SpeechDetected);
+            }
+        }
+
+        private void SpeechDetected(object sender, SpeechDetectedEventArgs e)
+        {
+            // Console.WriteLine("Detecting speech...");
         }
 
         private void SetActiveRecognizer()
@@ -159,6 +331,9 @@ namespace RecognizerApp
                 if (ActiveCulture.Equals(v.RecognizerInfo.Culture))
                 {
                     ActiveRecognizer = v;
+                    Console.WriteLine("Active recognizer: " + ActiveCulture.ToString());
+                    if (IsDemo)
+                        Console.WriteLine("Running from wav file: " + Cfg.Instance.AudioInput);
                 }
             }
         }
@@ -167,13 +342,13 @@ namespace RecognizerApp
         {
             _parser = new Parser();
             _sender = new ByteSender();
-            _recognizers = new List<SpeechRecognitionEngine>();
-            ActiveCulture = new CultureInfo(Cfg.Instance.DefaultCulture);
+            _recognizers = new List<SpeechRecognitionEngine>();            
             _worker = new BackgroundWorker();
             IsInit = false;
+            _wavFile = GetWavFileName();
         }
 
-        private bool InitGrammars()
+        private void InitGrammars()
         {
             try
             {
@@ -182,18 +357,34 @@ namespace RecognizerApp
                     _recognizers.Add(InitRecognizer(v.Key, v.Value));
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
-            }
-            return true;
+                throw ex;
+            }            
         }
 
         private void InitWorker()
         {
-            _worker.DoWork += new DoWorkEventHandler(_worker_DoWork);
+            _worker.DoWork += new DoWorkEventHandler(RecognitionLoop);
             _worker.ProgressChanged += new ProgressChangedEventHandler(_worker_ProgressChanged);
             _worker.WorkerReportsProgress = true;
+            _worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(_worker_RunWorkerCompleted);
+            _worker.WorkerSupportsCancellation = true;
+        }
+
+        void _worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Error != null)
+            {
+                StopRecognize();
+                ActiveRecognizer.SetInputToNull();
+                Console.WriteLine("Reached end of input file.");
+            }
+
+            if (e.Cancelled)
+                Console.WriteLine("Recognition stopped!");
+            else
+                Console.WriteLine("Recognition completed.");
         }
 
         private bool InitClient()
@@ -224,7 +415,15 @@ namespace RecognizerApp
         private ISender _sender;
         private List<SpeechRecognitionEngine> _recognizers;
         BackgroundWorker _worker;
+        String _wavFile;
+        System.Media.SoundPlayer _player;
+        private static int _count = 0;
 
         #endregion
+
+        public void Dispose()
+        {
+            Abort();
+        }
     }
 }

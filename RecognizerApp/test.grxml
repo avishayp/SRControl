@@ -4,10 +4,10 @@ tag-format="semantics/1.0" version="1.0"
 xmlns="http://www.w3.org/2001/06/grammar">
 
   <rule id="START">
-    <tag>out=""</tag>
+    <tag>out="test"</tag>
     <item>
       <one-of>
-        <item>shutter</item>
+        <item>tester</item>
       </one-of>
     </item>
   </rule>
@@ -30,211 +30,21 @@ xmlns="http://www.w3.org/2001/06/grammar">
       <item>13</item>
       <item>14</item>
       <item>15</item>
-    </one-of>
-  </rule>
-
-  <rule id="Coord">
-    <item>
-      <ruleref uri="#number"/> <tag>out.arg1 = rules.latest();</tag>
-    </item>
-    <item repeat="0-1">
-      <one-of>
-        <item>on</item>
-        <item>by</item>
-      </one-of>      
-    </item>
-    <item>
-      <ruleref uri="#number"/> <tag>out.arg2 = rules.latest();</tag>
-    </item>
-    <tag>out = out.arg1 + " " + out.arg2;</tag>
-  </rule>
-  
-  <rule id="CoverCmd">
-    <item>
-      <one-of>
-        <item>cover</item>
-      </one-of>
-      <item repeat="0-1">
-        <one-of>
-          <item>squares</item>
-          <item>square</item>
-          <item>grid</item>
-        </one-of>
-      </item>
-      <tag>out="CV";</tag>
-    </item>
-  </rule>
-  
-  <rule id="ShrinkCmd">
-    <item>
-      <one-of>
-        <item>shrink</item>
-      </one-of>
-      <item repeat="0-1">
-        <one-of>
-          <item>to</item>
-        </one-of>
-      </item>
-      <tag>out="SH";</tag>
-    </item>
-  </rule>
-
-  <rule id="StartCmd">
-    <item>
-      <one-of>
-        <item>start</item>
-      </one-of>
-      <tag>out="ST";</tag>
-    </item>
-  </rule>
-  
-  <rule id="DoneCmd">
-    <tag>out="DN";</tag>
-    <item>      
-      <one-of>
-        <item>done</item>
-        <item>quit</item>
-        <item>stop</item>
-      </one-of>
-    </item>
-  </rule>
-  
-  <rule id="GrowCmd">
-    <item>
-      <tag>out="GR";</tag>
-      <one-of>
-        <item>inflate</item>
-      </one-of>
-      <item repeat="0-1">
-        <one-of>
-          <item>to</item>
-        </one-of>
-      </item>      
-    </item>
-  </rule>
-  
-  <rule id="CloseCmd">
-    <item>
-      <one-of>
-        <item>close</item>
-      </one-of>
-      <tag>out="CL";</tag>
-    </item>
-  </rule>
-  
-  <rule id="OpenCmd">
-    <item>
-      <tag>out="OP";</tag>
-      <one-of>
-        <item>open</item>
-      </one-of>      
-    </item>
-  </rule>
-  
-  <rule id="ResizeCmd">
-    <item>
-      <one-of>
-        <item>resize</item>
-      </one-of>
-      <item repeat="0-1">
-        <one-of>
-          <item>to</item>
-        </one-of>
-      </item>
-      <tag>out="RS";</tag>
-    </item>
-  </rule>
-  
-  <rule id="MoveCmd">
-    <item>
-      <one-of>
-        <item>move</item>
-        <item>go</item>
-        <item>jump</item>
-      </one-of>
-      <item repeat="0-1">
-        <one-of>
-          <item>to</item>
-          <item>for</item>
-        </one-of>
-      </item>
-      <tag>out="MV";</tag>
-    </item>  
-  </rule>
-
-  <rule id="CommandNoArgs">
-    <one-of>
-      <item>
-        <ruleref uri="#OpenCmd"/>
-      </item>
-      <item>
-        <ruleref uri="#CloseCmd"/>
-      </item>
-      <item>
-        <ruleref uri="#DoneCmd"/>
-      </item>
-      <item>
-        <ruleref uri="#StartCmd"/>
-      </item>
-    </one-of>
-  </rule>
-
-  <rule id="CommandArgs">
-    <one-of>
-      <item>
-        <one-of>
-          <item>
-            <ruleref uri="#MoveCmd"/>
-          </item>
-          <item>
-            <ruleref uri="#GrowCmd"/>
-          </item>
-          <item>
-            <ruleref uri="#ShrinkCmd"/>
-          </item>
-        </one-of>
-        <tag>out.op = rules.latest();</tag>
-        <item>
-          <ruleref uri="#number"/> <tag>out.arg = rules.latest();</tag> 
-        </item>
-      </item>
-      <item>
-        <one-of>
-          <item>
-            <ruleref uri="#ResizeCmd"/>
-          </item>
-          <item>
-            <ruleref uri="#CoverCmd"/>
-          </item>
-        </one-of>
-        <tag>out.op = rules.latest();</tag>
-        <item>
-          <ruleref uri="#Coord"/> <tag>out.arg = rules.latest();</tag>
-        </item>  
-      </item>
-    </one-of>
-    <tag>out = out.op + " " + out.arg;</tag>
-  </rule>
-
-  <rule id="Command">
-    <one-of>
-      <item>
-        <ruleref uri="#CommandArgs" />
-      </item>
-      <item>
-        <ruleref uri="#CommandNoArgs" />
-      </item>
+      <item>16</item>
+      <item>17</item>
+      <item>18</item>
+      <item>19</item>
+      <item>20</item>
     </one-of>
   </rule>
 
   <rule id="MAIN">
-    <one-of>
-      <item>
-        <ruleref uri="#START" />
-      </item>
-    </one-of>
-    <item repeat="0-1">
-      <ruleref uri="#Command" />
+    <!--item>
+      <ruleref uri="#START" />
+    </item>
+    -->
+    <item>
+      <ruleref uri="#number" />
     </item>
   </rule>
   
