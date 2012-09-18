@@ -43,6 +43,12 @@ namespace RecognizerApp
                 PlaySound();
         }
 
+        public void EnterEmulationMode(String file)
+        {
+            _recognitionMethod = new DoWorkEventHandler(EmulatedRecognitionLoop);
+            _emulationProvider = new EmulationProvider(file);
+        }
+
         /// <summary>
         /// handles speech recognition event
         /// </summary>
@@ -59,7 +65,7 @@ namespace RecognizerApp
             // for debug
             _logger.PrintResult(result, _count);
 
-            if (!IsDemo)
+            if (!IsDemo && result.Audio != null)
                 _srMngr.SaveAudioStream(result);
 
             byte[] datagram = null;
@@ -80,8 +86,8 @@ namespace RecognizerApp
             if (_worker != null && _worker.IsBusy)
                 _worker.CancelAsync();
 
-            if (ActiveRecognizer != null)
-                ActiveRecognizer.RecognizeAsyncStop();
+            if (_activeRecognizer != null)
+                _activeRecognizer.RecognizeAsyncStop();
 
             StopSound();
         }
@@ -93,24 +99,7 @@ namespace RecognizerApp
         {
             StopRecognize();
 
-            for (int i = 0; i < _recognizers.Count; i++)
-                _recognizers[i].Dispose();
-        }
-
-        /// <summary>
-        /// set the matching recognizer as active
-        /// </summary>
-        /// <param name="info"></param>
-        public void ChangeLanguage(CultureInfo info)
-        {
-            if (!ActiveCulture.Equals(info))
-            {
-                Console.WriteLine(String.Format("Switching culture from {0} to {1}.", ActiveCulture, info));
-                StopRecognize();
-                ActiveCulture = info;
-                SetActiveRecognizer();
-                StartRecognize();
-            }
+            _activeRecognizer.Dispose();
         }
 
         /// <summary>
@@ -147,7 +136,7 @@ namespace RecognizerApp
             RecognitionResult result;
             while (true)
             {
-                result = ActiveRecognizer.Recognize();      // synchronic recognition
+                result = _activeRecognizer.Recognize();      // synchronic recognition
 
                 if (result != null)
                 {
@@ -160,6 +149,22 @@ namespace RecognizerApp
             }
         }
 
+        private void EmulatedRecognitionLoop(object sender, DoWorkEventArgs e)
+        {
+            RecognitionResult result;
+            while (true)
+            {
+                result = _activeRecognizer.EmulateRecognize(_emulationProvider.NextPhrase(), CompareOptions.IgnoreCase);      // synchronic recognition
+
+                if (result != null)
+                {
+                    ((BackgroundWorker)sender).ReportProgress(0, result);      // this event is (mis)used to handle the recognition result on the main app thread
+                }
+
+                Thread.Sleep(4000);
+            }
+        }
+
         /// <summary>
         /// handle speech recognition event
         /// </summary>
@@ -167,7 +172,7 @@ namespace RecognizerApp
         /// <returns>true if recgnition is confident, and semantic was parsed</returns>
         private bool HandleRecognized(RecognitionResult result)
         {
-            return HandleRecognized(ActiveRecognizer, result);
+            return HandleRecognized(_activeRecognizer, result);
         }
 
         /// <summary>
@@ -184,23 +189,6 @@ namespace RecognizerApp
         }
 
         /// <summary>
-        /// used to switch recognizers (for different languages)
-        /// </summary>
-        private void SetActiveRecognizer()
-        {
-            foreach (var v in _recognizers)
-            {
-                if (ActiveCulture.Equals(v.RecognizerInfo.Culture))
-                {
-                    ActiveRecognizer = v;
-                    Console.WriteLine("Active recognizer: " + ActiveCulture.ToString());
-                    if (IsDemo)
-                        Console.WriteLine("Running from wav file: " + Cfg.Instance.AudioInput);
-                }
-            }
-        }
-
-        /// <summary>
         /// this event handler only executed when the recognition loop throws an exception.
         /// this happens in demo mode, when the input wav file reaches end of file.
         /// </summary>
@@ -211,7 +199,7 @@ namespace RecognizerApp
             if (e.Error != null)
             {
                 StopRecognize();
-                ActiveRecognizer.SetInputToNull();
+                _activeRecognizer.SetInputToNull();
                 Console.WriteLine("Reached end of input file.");
             }
 
@@ -267,12 +255,9 @@ namespace RecognizerApp
         /// </summary>
         public void Init()
         {
-            ActiveCulture = new CultureInfo(Cfg.Instance.DefaultCulture);
-
             InitWorker();
             IsInit = InitClient();
-            InitGrammars();
-            SetActiveRecognizer();
+            InitGrammar();
         }
         
         /// <summary>
@@ -282,7 +267,6 @@ namespace RecognizerApp
         {
             _parser = new Parser();
             _sender = new ByteSender();
-            _recognizers = new List<SpeechRecognitionEngine>();            
             _worker = new BackgroundWorker();
             _srMngr = new RecognitionManager();
             _logger = new Logger();
@@ -293,13 +277,14 @@ namespace RecognizerApp
         /// <summary>
         /// creates recognizers and loads grammar files
         /// </summary>
-        private void InitGrammars()
+        private void InitGrammar()
         {
             try
             {
                 foreach (var v in Cfg.Instance.GrammarFiles)
                 {
-                    _recognizers.Add(_srMngr.CreateSpeechRecognizer(v.Key, v.Value));
+                    if (v.Key.Equals(Cfg.Instance.DefaultCulture))
+                        _activeRecognizer = _srMngr.CreateSpeechRecognizer(v.Key, v.Value);
                 }
             }
             catch (Exception ex)
@@ -313,7 +298,10 @@ namespace RecognizerApp
         /// </summary>
         private void InitWorker()
         {
-            _worker.DoWork += new DoWorkEventHandler(RecognitionLoop);
+            if (_recognitionMethod == null)
+                _recognitionMethod = new DoWorkEventHandler(RecognitionLoop);
+
+            _worker.DoWork += _recognitionMethod;
             _worker.ProgressChanged += new ProgressChangedEventHandler(_worker_ProgressChanged);
             _worker.WorkerReportsProgress = true;
             _worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(RecognitionLoopCompleted);
@@ -343,14 +331,13 @@ namespace RecognizerApp
 
         private Parser _parser;
         private ISender _sender;
-        private List<SpeechRecognitionEngine> _recognizers;
         BackgroundWorker _worker;
         System.Media.SoundPlayer _player;
         private RecognitionManager _srMngr;
         private ILogger _logger;
-
-        private CultureInfo ActiveCulture { get; set; }
-        private SpeechRecognitionEngine ActiveRecognizer { get; set; }
+        private DoWorkEventHandler _recognitionMethod;
+        private EmulationProvider _emulationProvider;
+        private SpeechRecognitionEngine _activeRecognizer;
         private static int _count = 0;
 
         #endregion

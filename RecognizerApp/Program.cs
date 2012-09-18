@@ -16,6 +16,7 @@ namespace RecognizerApp
             {
                 try
                 {
+                    _mngr.EnterEmulationMode("c:\\temp\\phrases.xml");
                     _mngr.Init();
                     _mngr.StartRecognize();
                     Application.Run();  // just to keep the background thread running

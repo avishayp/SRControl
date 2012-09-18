@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EmulationProvider.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Manager.cs" />
@@ -125,10 +126,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.cfg" />
-    <None Include="test.grxml" />
     <None Include="EnglishCmd.grxml">
       <SubType>Designer</SubType>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FrenchCmd.grxml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

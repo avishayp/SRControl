@@ -19,7 +19,7 @@ xmlns="http://www.w3.org/2001/06/grammar">
   <rule id="letter">
     <one-of>
       <item>A</item>
-      <item>B</item>
+      <!--item>B</item>
       <item>C</item>
       <item>D</item>
       <item>E</item>
@@ -27,14 +27,14 @@ xmlns="http://www.w3.org/2001/06/grammar">
       <item>G</item>
       <item>H</item>
       <item>I</item>
-      <item>J</item>
+      <item>J</item-->
     </one-of>
   </rule>
 
   <rule id="digit">
     <one-of>
       <item>0</item>
-      <item>1</item>
+      <!--item>1</item>
       <item>2</item>
       <item>3</item>
       <item>4</item>
@@ -43,14 +43,14 @@ xmlns="http://www.w3.org/2001/06/grammar">
       <item>7</item>
       <item>8</item>
       <item>9</item>
-      <item>10</item>
+      <item>10</item-->
     </one-of>
   </rule>
   
   <rule id="number">
     <one-of>
       <item>0</item>
-      <item>1</item>
+      <!--item>1</item>
       <item>2</item>
       <item>3</item>
       <item>4</item>
@@ -99,7 +99,8 @@ xmlns="http://www.w3.org/2001/06/grammar">
       <item>47</item>
       <item>48</item>
       <item>49</item>
-      <item>50</item>
+      <item>50</item -->
+      <!--
       <item>51</item>
       <item>52</item>
       <item>53</item>
@@ -149,6 +150,7 @@ xmlns="http://www.w3.org/2001/06/grammar">
       <item>97</item>
       <item>98</item>
       <item>99</item>
+      -->
     </one-of>
   </rule>
 
@@ -246,17 +248,6 @@ xmlns="http://www.w3.org/2001/06/grammar">
     <tag>out="SH";</tag>
     <item>shrink</item>
   </rule>
-
-  <rule id="ShrinkCmd">    
-    <item repeat="0-1">change</item>
-    <item>language</item>
-    <item repeat="0-1">to</item>
-    <one-of>
-      <item>english</item> <tag>out.arg = 0;</tag>
-      <item>french</item>  <tag>out.arg = 1;</tag>
-    </one-of>
-    <tag>out = "LANG " + out.arg;</tag>
-  </rule>
   
   <!--  ================   COMMANDS WITH 1 ARGUMENT  =============================== -->
   
@@ -303,7 +294,7 @@ xmlns="http://www.w3.org/2001/06/grammar">
       <item><ruleref uri="#ShowCmd"/></item>
       <item><ruleref uri="#HideCmd"/></item>
       <item><ruleref uri="#GrowCmd"/></item>
-      <item><ruleref uri="#ShrinkCmd"/></item>
+      <item><ruleref uri="#ShrinkCmd"/></item>  
     </one-of>
   </rule>
 

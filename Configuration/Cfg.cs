@@ -25,7 +25,6 @@ namespace Configuration
         {
             public String IP;
             public String port;
-            public String DefaultCulture;
             public List<String> GrammarFiles;
             public String AudioInput;
             public int RootConfidenceLevel;
@@ -48,7 +47,6 @@ namespace Configuration
         {
             _config.IP = "127.0.0.1";
             _config.port = "8000";
-            _config.DefaultCulture = "en-US";
             _config.GrammarFiles.Add("en-US=C:\\work\\Grammers\\English.grxml");
             _config.GrammarFiles.Add("fr-FR=C:\\work\\Grammers\\French.grxml");
             _config.Opcodes.Add(new Node() { OP = "MV", NUM = 10 });
@@ -112,7 +110,7 @@ namespace Configuration
 
         public String IPAddress { get { return _config.IP; } }
         public String Port { get {return _config.port;} }
-        public String DefaultCulture { get { return _config.DefaultCulture; } }
+        public String DefaultCulture { get { return System.Globalization.CultureInfo.CurrentUICulture.ToString(); } }
         public Dictionary<String,String> GrammarFiles { get { return _grammarFiles; } }
         public int RootConfidenceLevel { get { return _config.RootConfidenceLevel; } }
         public Dictionary<String, int> Opcodes { get; private set; }
